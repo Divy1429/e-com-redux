@@ -3,8 +3,8 @@
 
 export const RAZORPAY_CONFIG = {
   // Test Mode Keys (for development)
-  KEY_ID: "rzp_test_YOUR_KEY_ID", // Replace with your Test Key ID
-  KEY_SECRET: "YOUR_KEY_SECRET", // Keep this secret, only use on backend
+  KEY_ID: "rzp_test_RqFeZ70txJhgx4", // Replace with your Test Key ID
+  KEY_SECRET: "6YarpegIjzeVQM3hE3N7njPU", // Keep this secret, only use on backend
   
   // Production Mode Keys (for live payments)
   // KEY_ID: "rzp_live_YOUR_LIVE_KEY_ID",
