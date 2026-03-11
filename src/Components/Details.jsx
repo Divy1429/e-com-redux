@@ -1,24 +1,69 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../Features/cartSlice";
 import { addToWishlist, removeFromWishlist } from "../Features/wishlistSlice";
+import { fetchProducts } from "../Features/productsSlice";
+import { useExperiment } from "@growthbook/growthbook-react";
+import { growthbook } from "../growthbook";
 
 const Details = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { items } = useSelector(state => state.products);
+  const { items, status } = useSelector(state => state.products);
   const wishlistItems = useSelector(state => state.wishlist.items);
   
   const productId = Number(id);
+
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchProducts());
+    }
+  }, [status, dispatch]);
+
   const item = items.find((p) => p.id === productId); 
+
+  // GrowthBook Experiment Implementation
+  const { value: variant } = useExperiment({
+    key: "pdp-pricing-test",
+    variations: ["control", "variant-a", "variant-b"],
+    weights: [0.34, 0.33, 0.33] // Even split
+  });
 
   if (!item) return <div className="text-center py-20 text-xl">Loading...</div>
 
+  // Dynamic pricing and offer based on variant
+  let displayPrice = item.price;
+  let bundleDetails = null;
+
+  if (variant === "variant-a") {
+    displayPrice = 79.95;
+    bundleDetails = {
+      title: "Limited Time Offer: Test A",
+      description: "2 pairs bundle with an exclusive 10% discount!",
+      savings: "Save 10% on your total"
+    };
+  } else if (variant === "variant-b") {
+    displayPrice = 79.95;
+    bundleDetails = {
+      title: "Premium Bundle: Test B",
+      description: "Buy 2 for $159.95 and get 1 Free pair of Insoles (Value $29.95)",
+      savings: "FREE $29.95 Insoles included!"
+    };
+  } else {
+    // Control
+    displayPrice = 69.95;
+    bundleDetails = {
+      title: "Current Best Value",
+      description: "Standard 3 pairs bundle for maximum savings.",
+      savings: "Most popular choice"
+    };
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 mt-6">
       <div className="max-w-6xl mx-auto">
         <button 
           onClick={() => navigate('/')}
@@ -36,9 +81,15 @@ const Details = () => {
                 alt={item.title} 
                 className="object-contain max-h-96 w-full transition-transform duration-300 hover:scale-105" 
               />
-              <div className="absolute top-4 right-4 bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-full">
+              <div className="absolute top-4 right-4 bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-sm">
                 ID: #{item.id}
               </div>
+              
+              {/* Variant Badge for Testing/Demo */}
+              <div className="absolute bottom-4 right-4 bg-gray-800 text-white text-[10px] uppercase tracking-widest px-2 py-1 rounded opacity-50">
+                Experiment: {variant}
+              </div>
+
               <button
                 onClick={() => {
                   const isInWishlist = wishlistItems.some((w) => w.id === item.id);
@@ -80,6 +131,18 @@ const Details = () => {
                 <p className="text-gray-600 mb-6 leading-relaxed">
                   {item.description || 'No description available.'}
                 </p>
+
+                {/* GrowthBook Bundle Banner */}
+                <div className={`mb-6 p-4 rounded-lg border-l-4 ${
+                  variant === 'control' ? 'bg-blue-50 border-blue-500' : 
+                  variant === 'variant-a' ? 'bg-green-50 border-green-500' : 'bg-purple-50 border-purple-500'
+                }`}>
+                  <h3 className="font-bold text-gray-800">{bundleDetails.title}</h3>
+                  <p className="text-sm text-gray-600">{bundleDetails.description}</p>
+                  <span className="text-xs font-bold uppercase tracking-wider mt-2 block text-indigo-600">
+                    {bundleDetails.savings}
+                  </span>
+                </div>
                 
                 {item.category && (
                   <div className="mb-4">
@@ -99,10 +162,19 @@ const Details = () => {
               </div>
               
               <div className="border-t border-gray-200 pt-6">
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-4xl font-bold text-green-600">
-                    ${item.price}
-                  </span>
+                <div className="flex flex-col mb-6">
+                  <div className="flex items-center justify-between">
+                    <span className={`text-4xl font-bold ${
+                      variant === 'control' ? 'text-green-600' : 'text-blue-600'
+                    }`}>
+                      ${displayPrice}
+                    </span>
+                    {variant !== 'control' && (
+                      <span className="text-gray-400 line-through text-lg">
+                        ${variant === 'variant-a' ? '88.85' : '109.90'}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex gap-3">
@@ -125,7 +197,36 @@ const Details = () => {
                   </button>
                   <button 
                     onClick={() => {
-                      dispatch(addToCart(item));
+                      // Track conversion for the experiment
+                      console.log("Experiment Conversion", {
+                        experimentId: "pdp-pricing-test",
+                        variationId: variant,
+                        action: "add_to_cart",
+                        price: displayPrice
+                      });
+
+                      // Also send conversion to GA4 if available
+                      if (window.gtag) {
+                        window.gtag("event", "add_to_cart", {
+                          experiment_id: "pdp-pricing-test",
+                          variation_id: variant,
+                          currency: "USD",
+                          value: displayPrice,
+                          items: [{ item_id: item.id, item_name: item.title, price: displayPrice }]
+                        });
+                      }
+
+                      // GrowthBook Managed Warehouse Tracking
+                      if (growthbook && typeof growthbook.track === "function") {
+                        growthbook.track("add_to_cart", {
+                          product_id: item.id,
+                          price: displayPrice,
+                          variant: variant
+                        });
+                      }
+
+                      // Dispatch to cart
+                      dispatch(addToCart({...item, price: displayPrice, variantUsed: variant}));
                       navigate('/cart');
                     }}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl text-lg"
@@ -142,4 +243,4 @@ const Details = () => {
   )
 }
 
-export default Details
+export default Details
