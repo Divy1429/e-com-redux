@@ -14,7 +14,7 @@ const Details = () => {
 
   const { items, status } = useSelector(state => state.products);
   const wishlistItems = useSelector(state => state.wishlist.items);
-  
+
   const productId = Number(id);
 
   useEffect(() => {
@@ -23,14 +23,16 @@ const Details = () => {
     }
   }, [status, dispatch]);
 
-  const item = items.find((p) => p.id === productId); 
+  const item = items.find((p) => p.id === productId);
 
   // GrowthBook Experiment Implementation
-  const { value: variant } = useExperiment({
+  const result = useExperiment({
     key: "pdp-pricing-test",
     variations: ["control", "variant-a", "variant-b"],
     weights: [0.34, 0.33, 0.33] // Even split
   });
+  const variant = result.value;
+  const experiment = result.experiment;
 
   if (!item) return <div className="text-center py-20 text-xl">Loading...</div>
 
@@ -65,26 +67,26 @@ const Details = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 mt-6">
       <div className="max-w-6xl mx-auto">
-        <button 
+        <button
           onClick={() => navigate('/')}
           className="mb-6 text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-2"
         >
           ← Back to Products
         </button>
-        
+
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="grid md:grid-cols-2 gap-8 p-8">
             {/* Image Section */}
             <div className="relative bg-gray-50 p-8 flex items-center justify-center rounded-lg">
-              <img 
-                src={item.image} 
-                alt={item.title} 
-                className="object-contain max-h-96 w-full transition-transform duration-300 hover:scale-105" 
+              <img
+                src={item.image}
+                alt={item.title}
+                className="object-contain max-h-96 w-full transition-transform duration-300 hover:scale-105"
               />
               <div className="absolute top-4 right-4 bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-sm">
                 ID: #{item.id}
               </div>
-              
+
               {/* Variant Badge for Testing/Demo */}
               <div className="absolute bottom-4 right-4 bg-gray-800 text-white text-[10px] uppercase tracking-widest px-2 py-1 rounded opacity-50">
                 Experiment: {variant}
@@ -99,11 +101,10 @@ const Details = () => {
                     dispatch(addToWishlist(item));
                   }
                 }}
-                className={`absolute top-4 left-4 p-3 rounded-full transition-all duration-200 ${
-                  wishlistItems.some((w) => w.id === item.id)
+                className={`absolute top-4 left-4 p-3 rounded-full transition-all duration-200 ${wishlistItems.some((w) => w.id === item.id)
                     ? 'bg-pink-500 text-white'
                     : 'bg-white text-gray-400 hover:text-pink-500'
-                } shadow-md hover:shadow-lg`}
+                  } shadow-md hover:shadow-lg`}
                 title={wishlistItems.some((w) => w.id === item.id) ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 <svg
@@ -120,30 +121,29 @@ const Details = () => {
                 </svg>
               </button>
             </div>
-            
+
             {/* Details Section */}
             <div className="flex flex-col justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800 mb-4">
                   {item.title}
                 </h1>
-                
+
                 <p className="text-gray-600 mb-6 leading-relaxed">
                   {item.description || 'No description available.'}
                 </p>
 
                 {/* GrowthBook Bundle Banner */}
-                <div className={`mb-6 p-4 rounded-lg border-l-4 ${
-                  variant === 'control' ? 'bg-blue-50 border-blue-500' : 
-                  variant === 'variant-a' ? 'bg-green-50 border-green-500' : 'bg-purple-50 border-purple-500'
-                }`}>
+                <div className={`mb-6 p-4 rounded-lg border-l-4 ${variant === 'control' ? 'bg-blue-50 border-blue-500' :
+                    variant === 'variant-a' ? 'bg-green-50 border-green-500' : 'bg-purple-50 border-purple-500'
+                  }`}>
                   <h3 className="font-bold text-gray-800">{bundleDetails.title}</h3>
                   <p className="text-sm text-gray-600">{bundleDetails.description}</p>
                   <span className="text-xs font-bold uppercase tracking-wider mt-2 block text-indigo-600">
                     {bundleDetails.savings}
                   </span>
                 </div>
-                
+
                 {item.category && (
                   <div className="mb-4">
                     <span className="inline-block bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium">
@@ -151,7 +151,7 @@ const Details = () => {
                     </span>
                   </div>
                 )}
-                
+
                 {item.rating && (
                   <div className="mb-6 flex items-center gap-2">
                     <span className="text-yellow-500 text-lg">★</span>
@@ -160,13 +160,12 @@ const Details = () => {
                   </div>
                 )}
               </div>
-              
+
               <div className="border-t border-gray-200 pt-6">
                 <div className="flex flex-col mb-6">
                   <div className="flex items-center justify-between">
-                    <span className={`text-4xl font-bold ${
-                      variant === 'control' ? 'text-green-600' : 'text-blue-600'
-                    }`}>
+                    <span className={`text-4xl font-bold ${variant === 'control' ? 'text-green-600' : 'text-blue-600'
+                      }`}>
                       ${displayPrice}
                     </span>
                     {variant !== 'control' && (
@@ -176,9 +175,9 @@ const Details = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex gap-3">
-                  <button 
+                  <button
                     onClick={() => {
                       const isInWishlist = wishlistItems.some((w) => w.id === item.id);
                       if (isInWishlist) {
@@ -187,15 +186,14 @@ const Details = () => {
                         dispatch(addToWishlist(item));
                       }
                     }}
-                    className={`flex-1 font-bold py-4 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl text-lg ${
-                      wishlistItems.some((w) => w.id === item.id)
+                    className={`flex-1 font-bold py-4 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl text-lg ${wishlistItems.some((w) => w.id === item.id)
                         ? 'bg-pink-500 hover:bg-pink-600 text-white'
                         : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                    }`}
+                      }`}
                   >
                     {wishlistItems.some((w) => w.id === item.id) ? '💝 In Wishlist' : '🤍 Add to Wishlist'}
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       // Track conversion for the experiment
                       console.log("Experiment Conversion", {
@@ -208,8 +206,8 @@ const Details = () => {
                       // Send conversion to GA4 with both GB IDs and standard Ecommerce fields
                       if (window.gtag) {
                         window.gtag("event", "add_to_cart", {
-                          experimentId: "pdp-pricing-test",
-                          variationId: variant,
+                          experiment_id: experiment.key,
+                          variation_id: result.key,
                           currency: "USD",
                           value: displayPrice,
                           items: [{
@@ -230,7 +228,7 @@ const Details = () => {
                       }
 
                       // Dispatch to cart
-                      dispatch(addToCart({...item, price: displayPrice, variantUsed: variant}));
+                      dispatch(addToCart({ ...item, price: displayPrice, variantUsed: variant }));
                       navigate('/cart');
                     }}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl text-lg"
@@ -247,4 +245,4 @@ const Details = () => {
   )
 }
 
-export default Details
+export default Details
