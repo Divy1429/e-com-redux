@@ -205,12 +205,18 @@ const Details = () => {
                         price: displayPrice
                       });
 
-                      // Also send conversion to GA4 if available
+                      // Send conversion to GA4 with both GB IDs and standard Ecommerce fields
                       if (window.gtag) {
                         window.gtag("event", "add_to_cart", {
                           experimentId: "pdp-pricing-test",
                           variationId: variant,
-                          price: displayPrice
+                          currency: "USD",
+                          value: displayPrice,
+                          items: [{
+                            item_id: item.id,
+                            item_name: item.title,
+                            price: displayPrice
+                          }]
                         });
                       }
 
