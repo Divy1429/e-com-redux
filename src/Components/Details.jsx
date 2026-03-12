@@ -7,6 +7,12 @@ import { fetchProducts } from "../Features/productsSlice";
 import { useExperiment } from "@growthbook/growthbook-react";
 import { growthbook } from "../growthbook";
 
+const experimentConfig = {
+  key: "pdp-pricing-test",
+  variations: ["control", "variant-a", "variant-b"],
+  weights: [0.34, 0.33, 0.33] // Even split
+};
+
 const Details = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -26,13 +32,9 @@ const Details = () => {
   const item = items.find((p) => p.id === productId);
 
   // GrowthBook Experiment Implementation
-  const result = useExperiment({
-    key: "pdp-pricing-test",
-    variations: ["control", "variant-a", "variant-b"],
-    weights: [0.34, 0.33, 0.33] // Even split
-  });
-  const variant = result.value;
-  const experiment = result.experiment;
+  const experiment = experimentConfig;
+  const result = useExperiment(experiment) || {};
+  const variant = result.value || "control";
 
   if (!item) return <div className="text-center py-20 text-xl">Loading...</div>
 
@@ -206,8 +208,8 @@ const Details = () => {
                       // Send conversion to GA4 with both GB IDs and standard Ecommerce fields
                       if (window.gtag) {
                         window.gtag("event", "add_to_cart", {
-                          experiment_id: experiment.key,
-                          variation_id: result.key,
+                          experiment_id: experiment?.key || "pdp-pricing-test",
+                          variation_id: result?.key || variant,
                           currency: "USD",
                           value: displayPrice,
                           items: [{
