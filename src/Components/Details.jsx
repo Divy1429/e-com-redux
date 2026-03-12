@@ -36,6 +36,30 @@ const Details = () => {
   const result = useExperiment(experiment) || {};
   const variant = result.value || "control";
 
+  useEffect(() => {
+    if (!variant) return;
+
+    console.log("Experiment Viewed", {
+      experiment_id: "pdp-pricing-test",
+      variation_id: variant
+    });
+
+    if (window.gtag) {
+      window.gtag("event", "experiment_viewed", {
+        experiment_id: "pdp-pricing-test",
+        variation_id: variant
+      });
+    }
+
+    // GrowthBook warehouse tracking
+    if (growthbook && typeof growthbook.track === "function") {
+      growthbook.track("experiment_viewed", {
+        experiment_id: "pdp-pricing-test",
+        variation_id: variant
+      });
+    }
+  }, [variant]);
+
   if (!item) return <div className="text-center py-20 text-xl">Loading...</div>
 
   // Dynamic pricing and offer based on variant

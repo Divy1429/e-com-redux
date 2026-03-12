@@ -8,8 +8,8 @@ export const growthbook = new GrowthBook({
     // Send data to Google Analytics 4
     if (window.gtag) {
       window.gtag("event", "experiment_viewed", {
-        experimentId: experiment.key,
-        variationId: result.key,
+        experiment_id: experiment.key,
+        variation_id: result.key,
       });
     }
 
