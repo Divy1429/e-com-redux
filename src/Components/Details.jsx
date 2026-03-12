@@ -208,11 +208,9 @@ const Details = () => {
                       // Also send conversion to GA4 if available
                       if (window.gtag) {
                         window.gtag("event", "add_to_cart", {
-                          experiment_id: "pdp-pricing-test",
-                          variation_id: variant,
-                          currency: "USD",
-                          value: displayPrice,
-                          items: [{ item_id: item.id, item_name: item.title, price: displayPrice }]
+                          experimentId: "pdp-pricing-test",
+                          variationId: variant,
+                          price: displayPrice
                         });
                       }
 
